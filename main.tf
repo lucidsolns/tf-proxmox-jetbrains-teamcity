@@ -2,7 +2,7 @@ terraform {
   required_version = "~> 1.5.0"
 }
 /*
-    Jetbrains Hub (deployed as a container on Flatcar Linux)
+    Jetbrains Teamcity (deployed as a container on Flatcar Linux)
 
     Before creating the VM, the following ZFS based directory is used for Teamcity data:
       zfs create -o quota=10G -o mountpoint=/droplet/data/jetbrains-teamcity-data droplet/141-olive-jetbrains-teamcity-data
@@ -59,7 +59,8 @@ module "olive" {
       discard = "on" # enable 'trim' support, as ZFS supports this
     },
 
-    // A persistent data disk outside of the Proxmox lifecycle
+    // A persistent data disk outside of the Proxmox lifecycle. This is mounted
+    // inside the vm as /var/lib/postgresql for postgres
     //
     // Create the zvol with:
     //    zfs create -s -V 8G droplet/vm-141-olive-jetbrains-teamcity-pgdata
