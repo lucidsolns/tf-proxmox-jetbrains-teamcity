@@ -86,17 +86,6 @@ storage:
       contents:
         inline: ${vm_name}
 
-    # Docker compose for Jetbrains Teamcity
-    #
-    # To get athe admin token (from the 'olive' flatcar VM):
-    # To get athe admin token (from the 'olive' flatcar VM):
-    #     tail -f  /var/lib/teamcity/logs/teamcity-server.log
-    # see:
-    #  - https://hub.docker.com/r/jetbrains/teamcity-server/
-    #  - https://hub.docker.com/_/postgres
-    #  - https://github.com/JetBrains/teamcity-docker-samples
-    #  - https://github.com/JetBrains/teamcity-docker-samples/blob/master/compose-ubuntu/docker-compose.yml
-    #  - https://youtrack.jetbrains.com/issue/TW-83763/Teamcity-failed-to-start-with-new-PSQL-16-ERROR-unrecognized-configuration-parameter-lccollate
     - path: /etc/docker-compose.yaml
       mode: 0444
       contents:
@@ -104,7 +93,7 @@ storage:
 
     - path: /etc/systemd/network/10-eth0.network
       contents:
-        inline: local eth0.network
+        local: eth0.network
 
     # Locks down the ssh daemon.
     #
@@ -148,41 +137,10 @@ systemd:
           contents: |
             [Service]
             Environment="DOCKER_OPTS=--bridge=none --iptables=false --ip-masq=false"
-        
 
-    # 'docker compose' (v2) is not part of flatcar, so add it. This needs to be done
-    # after the network comes up, so do it via a systemd unit rather than a 'file' entry.
-    #
-    # WARNING: this doesn't install the cli plugin correctly, as it would need to be
-    # installed on '/usr' which is read-only. So docker compose must be used via
-    # `docker-compose` (i.e. with the hyphen).
-    #
-    # TODO: put this into a `.service` file when v1.1.0 ignition files are supported
-    # TODO: consider using a sysext
-    #
-    # see
-    #  - https://github.com/flatcar/Flatcar/issues/894#issuecomment-1318414513
-    #  - https://github.com/docker/compose
     - name: docker-compose-install.service
       enabled: true
-      contents: |
-        [Unit]
-        Wants=network-online.target
-        After=network.target network-online.target
-        ConditionFileIsExecutable=!/opt/bin/docker-compose
-        
-        [Service]
-        Environment=SOURCE_URL=https://github.com/docker/compose/releases/download/v2.21.0/docker-compose-linux-x86_64
-        Environment=VERIFICATION=08e549924823e97a3ea303c2309b812dfd5223b8be5ff96fe41bf75181ce0977
-        Type=oneshot
-        RemainAfterExit=True
-        ExecStart=/usr/bin/curl --location --no-progress-meter --output /opt/bin/docker-compose~ "$${SOURCE_URL}"
-        ExecStart=/bin/sh -c "echo \"$${VERIFICATION} /opt/bin/docker-compose~\" | /usr/bin/sha256sum --check --status"
-        ExecStart=/usr/bin/chmod +x /opt/bin/docker-compose~
-        ExecStart=/usr/bin/mv /opt/bin/docker-compose~ /opt/bin/docker-compose
-        
-        [Install]
-        WantedBy=multi-user.target
+      contents_local: docker-compose-install.service
 
     # Teamcity Service
     - name: teamcity.service

@@ -1,8 +1,24 @@
 ---
 version: "2.1"
 services:
+  #  Teamcity
+  #  ========
+  #
+  # Docker compose for Jetbrains Teamcity
+  #
+  #  How to upgrade: 1. change the image version. 2. terraform apply. 3. complete upgrade in the web UI
+  #
+  # To get the admin token (from the 'olive' flatcar VM):
+  #     tail -f  /var/lib/teamcity/logs/teamcity-server.log
+  # see:
+  #  - https://hub.docker.com/r/jetbrains/teamcity-server/
+  #  - https://github.com/JetBrains/teamcity-docker-images
+  #  - https://hub.docker.com/_/postgres
+  #  - https://github.com/JetBrains/teamcity-docker-samples
+  #  - https://github.com/JetBrains/teamcity-docker-samples/blob/master/compose-ubuntu/docker-compose.yml
+  #  - https://youtrack.jetbrains.com/issue/TW-83763/Teamcity-failed-to-start-with-new-PSQL-16-ERROR-unrecognized-configuration-parameter-lccollate
   teamcity:
-    image: jetbrains/teamcity-server:2023.11
+    image: jetbrains/teamcity-server:2023.11.1
     network_mode: host
     environment:
       - TZ=Pacific/Auckland
