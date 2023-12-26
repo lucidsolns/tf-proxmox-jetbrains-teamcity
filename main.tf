@@ -16,7 +16,7 @@ terraform {
 */
 module "olive" {
   source        = "lucidsolns/proxmox/vm"
-  version       = ">= 0.0.9"
+  version       = ">= 0.0.13"
   vm_id         = 141
   name          = "olive.lucidsolutions.co.nz"
   description   = <<-EOT
