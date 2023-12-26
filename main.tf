@@ -1,5 +1,5 @@
 terraform {
-  required_version = "~> 1.5.0"
+  required_version = "> 1.6.0"
 }
 /*
     Jetbrains Teamcity (deployed as a container on Flatcar Linux)
@@ -30,6 +30,7 @@ module "olive" {
   pm_password   = var.pm_password
   template_name = "flatcar-production-qemu-3602.2.1"
   butane_conf   = "${path.module}/jetbrains-teamcity.bu.tftpl"
+  butane_path   = "${path.module}/config"
   memory        = 4096
   networks      = [{ bridge = var.bridge, tag = 120 }]
   plan9fs       = [
@@ -38,7 +39,7 @@ module "olive" {
       tag   = "teamcity-data"
     }
   ]
-  disks         = [
+  disks = [
     // The flatcar EFI/boot/root/... template disk. This is a placeholder to
     // stop the proxmox provider from getting too confused.
     {
