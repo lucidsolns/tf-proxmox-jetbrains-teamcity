@@ -5,7 +5,7 @@
 #   - https://coreos.github.io/butane/config-flatcar-v1_0/
 #   - https://coreos.github.io/butane/
 #
-version: 1.0.0
+version: 1.1.0
 variant: flatcar
 
 passwd:
@@ -100,59 +100,11 @@ storage:
     - path: /etc/docker-compose.yaml
       mode: 0444
       contents:
-        inline: |
-          ---
-          version: "2.1"
-          services:
-            teamcity:
-              image: jetbrains/teamcity-server:2023.11
-              network_mode: host
-              environment:
-                - TZ=Pacific/Auckland
-                - X_TEAMCITY_SERVER_MEM_OPTS="-Xmx3000m -XX:MaxPermSize=270m -XX:ReservedCodeCacheSize=640m"
-              ports:
-                - "8111:8111"
-              volumes:
-                - "/var/lib/teamcity/data:/data/teamcity_server/datadir"
-                - "/var/lib/teamcity/logs:/opt/teamcity/logs"
-              depends_on:
-                - db
-              restart: unless-stopped
-            
-            db:
-              # Only v15.x is supported, and LC_COLLATE isn't supported by musl/alpine
-              image: postgres:15.4-bookworm
-              network_mode: host
-              command: "-c listen_addresses=::1,127.0.0.1"
-              environment:
-                - POSTGRES_PASSWORD=8bNW9yi7J4mc3jkdX4voRMoqrYgAVW
-                - POSTGRES_USER=teamcity
-                - POSTGRES_DB=teamcity
-                - PG_DATA=/var/lib/postgresql/data
-              ports:
-                - 5432:5432
-              volumes:
-                - /var/lib/postgresql/data:/var/lib/postgresql/data
-              restart: unless-stopped
-          
-
+        local: docker-compose.yaml
 
     - path: /etc/systemd/network/10-eth0.network
       contents:
-        inline: |
-          [Match]
-          Name=eth0
-          
-          [Link]
-          MTUBytes=9000
-
-          [Network]
-          Address=10.20.20.2/24
-          Gateway=10.20.20.1
-          IPv6AcceptRA=yes
-          
-          [IPv6AcceptRA]
-          Token=static:::2
+        inline: local eth0.network
 
     # Locks down the ssh daemon.
     #

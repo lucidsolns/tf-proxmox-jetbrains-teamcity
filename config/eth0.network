@@ -1,0 +1,13 @@
+[Match]
+Name=eth0
+
+[Link]
+MTUBytes=9000
+
+[Network]
+Address=10.20.20.2/24
+Gateway=10.20.20.1
+IPv6AcceptRA=yes
+
+[IPv6AcceptRA]
+Token=static:::2
