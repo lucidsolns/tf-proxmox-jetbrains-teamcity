@@ -28,7 +28,7 @@ module "olive" {
   target_node   = var.target_node
   pm_user       = var.pm_user
   pm_password   = var.pm_password
-  template_name = "flatcar-production-qemu-3602.2.1"
+  template_name = "flatcar-production-qemu-stable-3602.2.3"
   butane_conf   = "${path.module}/jetbrains-teamcity.bu.tftpl"
   butane_path   = "${path.module}/config"
   memory        = 4096
