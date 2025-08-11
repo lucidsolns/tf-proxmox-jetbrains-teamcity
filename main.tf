@@ -1,78 +1,77 @@
 terraform {
-  required_version = "> 1.6.0"
+  required_version = ">= 1.12.0"
 }
 /*
     Jetbrains Teamcity (deployed as a container on Flatcar Linux)
 
     Before creating the VM, the following ZFS based directory is used for Teamcity data:
       zfs create -o quota=10G -o mountpoint=/droplet/data/jetbrains-teamcity-data droplet/141-olive-jetbrains-teamcity-data
-    The data directory is put into the Flatcar Linux VM using plan9fs, then it
+    The data directory is put into the Flatcar Linux VM using virtiofs, then it
     is mounted using 2 paths into the hub docker container.
-
-    And the following zvol is used for postgre SQL data:
-      zfs create -s -V 8G droplet/vm-141-olive-jetbrains-teamcity-pgdata
-    The ZFS zvol is mounted the VM and directly mapped into the PGSQL container.
 
 */
 module "olive" {
-  source        = "lucidsolns/proxmox/vm"
-  version       = ">= 0.0.13"
-  vm_id         = 141
-  name          = "olive.lucidsolutions.co.nz"
-  description   = <<-EOT
-      Jetbrains Teamcity running as a container on Flatcar Linux with plan9fs for data/logs/conf/backup
+  # source = "../terraform-proxmox-flatcar-vm"
+  source  = "lucidsolns/flatcar-vm/proxmox"
+  version = "1.0.6"
+
+  node_name      = var.target_node
+  vm_id          = 141
+  vm_name        = "olive.lucidsolutions.co.nz"
+  vm_description = <<-EOT
+      Jetbrains Teamcity running as a container on Flatcar Linux with virtiofs for data/logs/conf/backup
   EOT
-  startup       = "order=80"
-  tags          = ["flatcar", "jetbrains", "teamcity", "development"]
-  pm_api_url    = var.pm_api_url
-  target_node   = var.target_node
-  pm_user       = var.pm_user
-  pm_password   = var.pm_password
-  template_name = "flatcar-production-qemu-stable-3602.2.3"
-  butane_conf   = "${path.module}/jetbrains-teamcity.bu.tftpl"
-  butane_path   = "${path.module}/config"
-  memory        = 4096
-  networks      = [{ bridge = var.bridge, tag = 120 }]
-  plan9fs       = [
+  tags = ["flatcar", "jetbrains", "teamcity", "development"]
+
+  butane_conf         = "${path.module}/jetbrains-teamcity.bu.tftpl"
+  butane_snippet_path = "${path.module}/config"
+
+  memory = {
+    dedicated = 4096
+  }
+
+  bridge  = var.bridge
+  vlan_id = 120
+
+  storage_images = var.storage_images
+  storage_root   = var.storage_root
+  storage_path_mapping = var.storage_path_mapping
+
+  // Note: move back to stable once the virtiofs is in stable
+  flatcar_channel = "beta"
+  flatcar_version = "4344.1.1"
+
+  //  The 'Data Center' direction mappings must be created manually before
+  //  running this script. Create a mapping:
+  //      - with the mapping name 'teamcity-data'
+  //      - with a directory '/droplet/data/jetbrains-teamcity-data' or where ever there is disk
+  //
+  directories = [
     {
-      dirid = "/droplet/data/jetbrains-teamcity-data"
-      tag   = "teamcity-data"
+      name = "teamcity-data"
     }
   ]
-  disks = [
-    // The flatcar EFI/boot/root/... template disk. This is a placeholder to
-    // stop the proxmox provider from getting too confused.
-    {
-      slot    = 0
-      type    = "scsi"
-      size    = "0K" # no size, we don't want the template resized
-      storage = "local"
-      format  = "qcow2"
-    },
 
+  disks = [
     // A non-persistent sparse disk for swap, this is /dev/vda in the VM
     {
-      slot    = 1
-      type    = "virtio"
-      storage = "vmdata" # hack, this must be 'present'
-      size    = "4G" # hack, this must be present
-      format  = "raw"
+      datastore_id = var.storage_data # hack, this must be 'present'
+      size = "4" # hack, this must be present
+      iothread = true
       discard = "on" # enable 'trim' support, as ZFS supports this
-    },
+      backup   = false
+    }
+  ]
 
+  persistent_disks = [
     // A persistent data disk outside of the Proxmox lifecycle. This is mounted
     // inside the vm as /var/lib/postgresql for postgres
-    //
-    // Create the zvol with:
-    //    zfs create -s -V 8G droplet/vm-141-olive-jetbrains-teamcity-pgdata
     {
-      slot    = 2
-      type    = "virtio"
-      storage = "format=raw" # hack, this must be 'present'
-      size    = "0K" # hack, disable trying to size the volume
-      volume  = "/dev/zvol/droplet/vm-141-olive-jetbrains-teamcity-pgdata"
-      format  = "raw" # default
-      discard = "on" # enable 'trim' support, as ZFS supports this
+      datastore_id = var.storage_data
+      size = 2 # gigabytes
+      iothread     = true
+      discard      = "on"
+      backup       = true
     }
   ]
 }

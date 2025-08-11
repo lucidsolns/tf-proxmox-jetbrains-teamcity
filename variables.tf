@@ -13,8 +13,7 @@ variable "pm_api_url" {
 //  - https://thenewstack.io/automate-k3s-cluster-installation-on-flatcar-container-linux/
 //
 variable "target_node" {
-  description = "The name of the proxmox-ve node to provision the VM on"
-  type        = string
+  default = "proxmox"
 }
 
 
@@ -31,6 +30,12 @@ variable "pm_password" {
   default     = ""
 }
 
+variable "ssh_username" {
+  description = "The SSH username used when performing commands that require SSH access to Proxmox"
+  default     = "root"
+  type        = string
+}
+
 variable "bridge" {
   default = "vmbr0"
   type=string
@@ -39,4 +44,15 @@ variable "bridge" {
 variable "network_tag" {
   default = 0
   type = number
+}
+
+variable "storage_images" { default = "vmroot" }
+variable "storage_root" { default = "vmroot" }
+variable "storage_data" { default = "vmdata" }
+variable storage_path_mapping {
+  description = "Mapping of storage name to a local path"
+  type = map(string)
+  default = {
+    "vmroot" = "/droplet/vmroot"
+  }
 }

@@ -1,0 +1,18 @@
+#
+#  Mount a virtiofs filesystem. This required FLatcar Linux version 4344 or
+#  greater (it has made it to the 'beta' channel as of August 2025)
+#
+# see:
+#  - https://github.com/flatcar/scripts/pull/2825
+#  - https://docs.kernel.org/filesystems/virtiofs.html
+[Unit]
+Description=Data for Jetbrains Teamcity
+
+[Mount]
+What=teamcity-data
+Where=/var/lib/teamcity
+Type=virtiofs
+Options=rw,nofail
+
+[Install]
+WantedBy=local-fs.target

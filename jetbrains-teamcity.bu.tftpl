@@ -33,7 +33,7 @@ storage:
     #
     # see:
     #   - https://docs.docker.com/config/containers/resource_constraints/
-    - device: /dev/vda
+    - device: /dev/vdb
       wipe_table: false
       partitions:
         - label: swap
@@ -41,7 +41,7 @@ storage:
           type_guid: 0657FD6D-A4AB-43C4-84E5-0933C84B4F4F # see https://en.wikipedia.org/wiki/GUID_Partition_Table
 
     # Partition the sparse ZFS zvol with a GPT, with a single partition
-    - device: /dev/vdb
+    - device: /dev/vdc
       wipe_table: false
       partitions:
         - label: pgdata
@@ -102,31 +102,32 @@ storage:
       overwrite: true
       mode: 0600
       contents:
-        inline: |
-          # Use most defaults for sshd configuration.
-          Subsystem sftp internal-sftp
-          UseDNS no
+        local: sshd_config
 
-          PermitRootLogin no
-          AllowUsers core pages
-          AuthenticationMethods publickey        
-  
+    # Download the 'docker-compose' sysext. It is important to note that the
+    # download will require network connectivity (which won't have been setup
+    # at this stage as the networkd file won't have been written, so the network
+    # will either need to get an address via DHCP, or a kernel command line configuration.
+    #
+    # see:
+    #  - https://flatcar.github.io/sysext-bakery/docker_compose/
+    #  - https://flatcar.github.io/sysext-bakery/
+    #  - https://www.flatcar.org/docs/latest/provisioning/ignition/network-configuration/
+    - path: /opt/extensions/docker-compose/docker-compose-2.34.0-x86-64.raw
+      mode: 0644
+      contents:
+        source: https://extensions.flatcar.org/extensions/docker-compose-2.34.0-x86-64.raw
+
+  links:
+    - target: /opt/extensions/docker-compose/docker-compose-2.34.0-x86-64.raw
+      path: /etc/extensions/docker-compose.raw
+      hard: false
+
 systemd:
   units:
     - name: var-lib-teamcity.mount
       enabled: true
-      contents: |
-        [Unit]
-        Description=Data for Jetbrains Teamcity
-        
-        [Mount]
-        What=teamcity-data
-        Where=/var/lib/teamcity
-        Type=9p
-        Options=trans=virtio
-        
-        [Install]
-        WantedBy=local-fs.target
+      contents_local: var-lib-teamcity.mount
 
     # Use host networking, so disable the bridge and iptables/NAT
     - name: docker.service
@@ -137,24 +138,8 @@ systemd:
             [Service]
             Environment="DOCKER_OPTS=--bridge=none --iptables=false --ip-masq=false"
 
-    - name: docker-compose-install.service
-      enabled: true
-      contents_local: docker-compose-install.service
-
     # Teamcity Service
     - name: teamcity.service
       enabled: true
-      contents: |
-        [Unit]
-        After=docker.service docker-compose-install.service
-        Requires=docker.service docker-compose-install.service
-        
-        [Service]
-        # Create directory manually, as /var/lib/teamcity is mounted after ignition runs
-        ExecStartPre=/bin/mkdir -p /var/lib/teamcity/data /var/lib/teamcity/logs /var/lib/postgresql/data 
-        ExecStartPre=/bin/chown postgres:postgres /var/lib/postgresql /var/lib/postgresql/data 
-        ExecStartPre=/bin/chown tcuser:tcuser /var/lib/teamcity/data /var/lib/teamcity/logs 
-        ExecStart=/opt/bin/docker-compose -f /etc/docker-compose.yaml up
-        
-        [Install]
-        WantedBy=multi-user.target
+      contents_local: teamcity.service
+
