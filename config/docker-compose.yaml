@@ -16,7 +16,6 @@ services:
   # see:
   #  - https://hub.docker.com/r/jetbrains/teamcity-server/
   #  - https://github.com/JetBrains/teamcity-docker-images
-  #  - https://hub.docker.com/_/postgres
   #  - https://github.com/JetBrains/teamcity-docker-samples
   #  - https://github.com/JetBrains/teamcity-docker-samples/blob/master/compose-ubuntu/docker-compose.yml
   #  - https://youtrack.jetbrains.com/issue/TW-83763/Teamcity-failed-to-start-with-new-PSQL-16-ERROR-unrecognized-configuration-parameter-lccollate
@@ -36,6 +35,10 @@ services:
       - db
     restart: unless-stopped
 
+  # A Postgres DB instance
+  #
+  # see:
+  #  - https://hub.docker.com/_/postgres
   db:
     # Only v15.x is supported, and LC_COLLATE isn't supported by musl/alpine
     image: postgres:15.4-bookworm

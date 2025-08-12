@@ -3,7 +3,7 @@ After=docker.service systemd-sysext.service
 Requires=docker.service systemd-sysext.service
 
 [Service]
-# Create directory manually, as /var/lib/teamcity is mounted after ignition runs
+# Create directory manually, as /var/lib/teamcity is mounted after ignition runs (those rules have changed with virtiofs)
 ExecStartPre=/bin/mkdir -p /var/lib/teamcity/data /var/lib/teamcity/logs /var/lib/postgresql/data
 ExecStartPre=/bin/chown postgres:postgres /var/lib/postgresql /var/lib/postgresql/data
 ExecStartPre=/bin/chown tcuser:tcuser /var/lib/teamcity/data /var/lib/teamcity/logs
