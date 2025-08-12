@@ -9,6 +9,7 @@ This repository contains:
   - with a Postgres database [container](https://hub.docker.com/_/postgres)
   - using a simple [docker compose](config/docker-compose.yaml)
   - with a [butane/ignition](jetbrains-teamcity.bu.tftpl) script
+  - using a sysext for [docker compose](https://flatcar.github.io/sysext-bakery/docker_compose/) in Flatcar 
 
 
 # Residuals
