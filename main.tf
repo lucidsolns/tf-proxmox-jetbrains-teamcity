@@ -25,6 +25,9 @@ module "olive" {
 
   butane_conf         = "${path.module}/jetbrains-teamcity.bu.tftpl"
   butane_snippet_path = "${path.module}/config"
+  butane_variables = {
+    DB_TEAMCITY_PASSWORD        = random_password.db_teamcity_password.result
+  }
 
   memory = {
     dedicated = 4096
@@ -74,5 +77,32 @@ module "olive" {
       backup       = true
     }
   ]
+}
+
+
+/*
+  Generate a random password to be used for the 'teamcity' user for the db
+  server. This password will be needed if performing an initial setup of a
+  Teamcity server.
+
+  If this password changes, then the following places will need to be manually updated:
+     - the teamcity configuration
+     - the postgres database user passwords
+
+  To get the password from the state file:
+     `terraform output -raw db_teamcity_password`
+
+  To update teamcity put the password into the file `/var/lib/teamcity/data/config/database.properties`
+  and change the property `connectionProperties.password` with the new password.
+
+  To update the postgres database execute the following command (from the
+  flatcar VM) with the password obtained from the command above:
+  ```shell
+      docker exec -it postgres psql -U teamcity -d postgres -c "ALTER USER teamcity WITH PASSWORD 'newpassword';"
+  ```
+*/
+resource "random_password" "db_teamcity_password" {
+  length = 32   # number of characters
+  special = false # include special chars
 }
 

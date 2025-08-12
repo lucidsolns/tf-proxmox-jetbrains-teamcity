@@ -90,6 +90,17 @@ storage:
       contents:
         local: docker-compose.yaml
 
+    # write the initial passwords to an environment file that will be provided
+    # to docker compose. This password will also need to be manually used
+    # if performing an initial setup with teamcity.
+    - path: /etc/docker-compose-postgres.env
+      mode: 0400
+      contents:
+        inline: |
+          POSTGRES_DB=teamcity
+          POSTGRES_USER=teamcity
+          POSTGRES_PASSWORD=${DB_TEAMCITY_PASSWORD}
+
     - path: /etc/systemd/network/10-eth0.network
       contents:
         local: eth0.network

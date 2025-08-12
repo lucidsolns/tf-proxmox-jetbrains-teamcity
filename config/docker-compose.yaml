@@ -1,5 +1,5 @@
 ---
-version: "2.1"
+version: "3.8"
 services:
   #  Teamcity
   #  ========
@@ -22,6 +22,7 @@ services:
   #  - https://youtrack.jetbrains.com/issue/TW-83763/Teamcity-failed-to-start-with-new-PSQL-16-ERROR-unrecognized-configuration-parameter-lccollate
   teamcity:
     image: jetbrains/teamcity-server:2025.07
+    container_name: teamcity
     network_mode: host
     environment:
       - TZ=Pacific/Auckland
@@ -38,17 +39,21 @@ services:
   db:
     # Only v15.x is supported, and LC_COLLATE isn't supported by musl/alpine
     image: postgres:15.4-bookworm
+    container_name: postgres
     network_mode: host
     command: "-c listen_addresses=::1,127.0.0.1"
     environment:
-      # TODO: autogenerate a password, put these into a file, and pass the file with POSTGRES_PASSWORD_FILE
-      - POSTGRES_PASSWORD=8bNW9yi7J4mc3jkdX4voRMoqrYgAVW
-      - POSTGRES_USER=teamcity
-      - POSTGRES_DB=teamcity
-      - PG_DATA=/var/lib/postgresql/data
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres
+      PG_DATA: /var/lib/postgresql/data
+    secrets:
+      - postgres
     ports:
       - 5432:5432
     volumes:
       - /var/lib/postgresql/data:/var/lib/postgresql/data
     restart: unless-stopped
 
+secrets:
+  postgres:
+    # this file is written by the ignition script
+    file: /etc/docker-compose-postgres.env

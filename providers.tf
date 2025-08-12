@@ -1,17 +1,20 @@
 terraform {
   required_version = "> 1.12.0"
 
-  /**
-
-    see:
-      - https://registry.terraform.io/providers/bpg/proxmox/latest/docs
-   */
   required_providers {
+    /**
+
+      see:
+        - https://registry.terraform.io/providers/bpg/proxmox/latest/docs
+     */
     proxmox = {
       source  = "bpg/proxmox"
       version = ">= 0.81.0"
     }
-
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.7.2"
+    }
   }
 }
 

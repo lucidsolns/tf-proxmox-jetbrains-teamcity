@@ -2,5 +2,4 @@
 
 # Residuals
 
-- don't use an insecure password on the database
 - add a healthcheck to the containers
