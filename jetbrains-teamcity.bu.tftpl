@@ -29,19 +29,8 @@ passwd:
 
 storage:
   disks:
-    # Partition the ZFS sparse zvol with a GPT, with a single swap partition
-    #
-    # see:
-    #   - https://docs.docker.com/config/containers/resource_constraints/
-    - device: /dev/vdb
-      wipe_table: false
-      partitions:
-        - label: swap
-          wipe_partition_entry: false
-          type_guid: 0657FD6D-A4AB-43C4-84E5-0933C84B4F4F # see https://en.wikipedia.org/wiki/GUID_Partition_Table
-
     # Partition the sparse ZFS zvol with a GPT, with a single partition
-    - device: /dev/vdc
+    - device: /dev/vdb
       wipe_table: false
       partitions:
         - label: pgdata
@@ -50,12 +39,6 @@ storage:
           type_guid: 3B8F8425-20E0-4F3B-907F-1A25A76F98E8 # see https://en.wikipedia.org/wiki/GUID_Partition_Table
 
   filesystems:
-    - device: /dev/disk/by-partlabel/swap
-      format: swap
-      wipe_filesystem: true
-      label: swap
-      with_mount_unit: true
-
     # In theory this partition could be auto-mounted, but it is not on the same physical disk
     # as the EFI system partition.
     - device: /dev/disk/by-partlabel/pgdata

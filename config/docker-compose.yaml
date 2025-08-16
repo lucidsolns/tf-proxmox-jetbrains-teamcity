@@ -20,12 +20,21 @@ services:
   #  - https://github.com/JetBrains/teamcity-docker-samples/blob/master/compose-ubuntu/docker-compose.yml
   #  - https://youtrack.jetbrains.com/issue/TW-83763/Teamcity-failed-to-start-with-new-PSQL-16-ERROR-unrecognized-configuration-parameter-lccollate
   teamcity:
-    image: jetbrains/teamcity-server:2025.07
+    image: jetbrains/teamcity-server:2025.07.1
     container_name: teamcity
     network_mode: host
     environment:
       - TZ=Pacific/Auckland
-      - X_TEAMCITY_SERVER_MEM_OPTS="-Xmx3000m -XX:MaxPermSize=270m -XX:ReservedCodeCacheSize=640m"
+      - X_TEAMCITY_SERVER_MEM_OPTS=>
+          -Xms1024m
+          -Xmx4500m
+          -XX:MaxPermSize=270m
+          -XX:ReservedCodeCacheSize=640m
+          -XX:MaxMetaspaceSize=512m
+          -XX:+UseG1GC
+          -XX:+ParallelRefProcEnabled
+          -XX:+UnlockExperimentalVMOptions
+          -XX:+UseContainerSupport
     ports:
       - "8111:8111"
     volumes:

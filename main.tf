@@ -29,8 +29,14 @@ module "olive" {
     DB_TEAMCITY_PASSWORD        = random_password.db_teamcity_password.result
   }
 
+  cpu = {
+    cores = 4
+    // Broadwell Xeon-D
+    // see: https://registry.terraform.io/providers/bpg/proxmox/latest/docs/resources/virtual_environment_vm#type-11
+    type  = "x86-64-v3"
+  }
   memory = {
-    dedicated = 4096
+    dedicated = 6000
   }
 
   bridge  = var.bridge
@@ -52,17 +58,6 @@ module "olive" {
   directories = [
     {
       name = "teamcity-data"
-    }
-  ]
-
-  disks = [
-    // A non-persistent sparse disk for swap, this is /dev/vda in the VM
-    {
-      datastore_id = var.storage_data # hack, this must be 'present'
-      size = "4" # hack, this must be present
-      iothread = true
-      discard = "on" # enable 'trim' support, as ZFS supports this
-      backup   = false
     }
   ]
 
