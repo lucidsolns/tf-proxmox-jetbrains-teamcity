@@ -13,7 +13,7 @@ terraform {
 module "olive" {
   # source = "../terraform-proxmox-flatcar-vm"
   source  = "lucidsolns/flatcar-vm/proxmox"
-  version = "1.0.7"
+  version = "1.0.10"
 
   node_name      = var.target_node
   vm_id          = 141
