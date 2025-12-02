@@ -1,6 +1,8 @@
 [Unit]
-After=docker.service systemd-sysext.service
+Description=Start a single docker compose based application
 Requires=docker.service systemd-sysext.service
+After=docker.service systemd-sysext.service network-online.target
+Wants=network-online.target
 
 [Service]
 # Create directory manually, as /var/lib/teamcity is mounted after ignition runs (those rules have changed with virtiofs)
@@ -8,6 +10,8 @@ ExecStartPre=/bin/mkdir -p /var/lib/teamcity/data /var/lib/teamcity/logs /var/li
 ExecStartPre=/bin/chown postgres:postgres /var/lib/postgresql /var/lib/postgresql/data
 ExecStartPre=/bin/chown tcuser:tcuser /var/lib/teamcity/data /var/lib/teamcity/logs
 ExecStart=/usr/bin/docker compose -f /etc/docker-compose.yaml up
+ExecStop=/usr/bin/docker compose -f /etc/docker-compose.yaml down
+TimeoutStopSec=45
 
 [Install]
 WantedBy=multi-user.target

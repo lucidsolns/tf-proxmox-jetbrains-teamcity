@@ -13,7 +13,7 @@ terraform {
 module "olive" {
   # source = "../terraform-proxmox-flatcar-vm"
   source  = "lucidsolns/flatcar-vm/proxmox"
-  version = "1.0.10"
+  version = "1.0.13"
 
   node_name      = var.target_node
   vm_id          = 141
@@ -21,19 +21,19 @@ module "olive" {
   vm_description = <<-EOT
       Jetbrains Teamcity running as a container on Flatcar Linux with virtiofs for data/logs/conf/backup
   EOT
-  tags = ["flatcar", "jetbrains", "teamcity", "development"]
+  tags           = ["flatcar", "jetbrains", "teamcity", "development"]
 
   butane_conf         = "${path.module}/jetbrains-teamcity.bu.tftpl"
   butane_snippet_path = "${path.module}/config"
   butane_variables = {
-    DB_TEAMCITY_PASSWORD        = random_password.db_teamcity_password.result
+    DB_TEAMCITY_PASSWORD = random_password.db_teamcity_password.result
   }
 
   cpu = {
     cores = 4
     // Broadwell Xeon-D
     // see: https://registry.terraform.io/providers/bpg/proxmox/latest/docs/resources/virtual_environment_vm#type-11
-    type  = "x86-64-v3"
+    type = "x86-64-v3"
   }
   memory = {
     dedicated = 6000
@@ -42,15 +42,11 @@ module "olive" {
   bridge  = var.bridge
   vlan_id = 120
 
-  storage_images = var.storage_images
-  storage_root   = var.storage_root
+  storage_images       = var.storage_images
+  storage_root         = var.storage_root
   storage_path_mapping = var.storage_path_mapping
 
-  // Note: move back to stable once the virtiofs is in stable
-  flatcar_channel = "beta"
-  flatcar_version = "4344.1.1"
-
-  //  The 'Data Center' direction mappings must be created manually before
+  //  The 'Data Center' directory mappings must be created manually before
   //  running this script. Create a mapping:
   //      - with the mapping name 'teamcity-data'
   //      - with a directory '/droplet/data/jetbrains-teamcity-data' or where ever there is disk
@@ -66,7 +62,7 @@ module "olive" {
     // inside the vm as /var/lib/postgresql for postgres
     {
       datastore_id = var.storage_data
-      size = 2 # gigabytes
+      size         = 2 # gigabytes
       iothread     = true
       discard      = "on"
       backup       = true
@@ -97,7 +93,7 @@ module "olive" {
   ```
 */
 resource "random_password" "db_teamcity_password" {
-  length = 32   # number of characters
+  length  = 32    # number of characters
   special = false # include special chars
 }
 

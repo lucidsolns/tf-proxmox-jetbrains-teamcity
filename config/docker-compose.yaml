@@ -1,5 +1,4 @@
 ---
-version: "3.8"
 services:
   #  Teamcity
   #  ========
@@ -15,12 +14,13 @@ services:
   #     tail -f  /var/lib/teamcity/logs/teamcity-server.log
   # see:
   #  - https://hub.docker.com/r/jetbrains/teamcity-server/
+  #  - https://www.jetbrains.com/teamcity/download/other.html
   #  - https://github.com/JetBrains/teamcity-docker-images
   #  - https://github.com/JetBrains/teamcity-docker-samples
   #  - https://github.com/JetBrains/teamcity-docker-samples/blob/master/compose-ubuntu/docker-compose.yml
   #  - https://youtrack.jetbrains.com/issue/TW-83763/Teamcity-failed-to-start-with-new-PSQL-16-ERROR-unrecognized-configuration-parameter-lccollate
   teamcity:
-    image: jetbrains/teamcity-server:2025.07.1
+    image: jetbrains/teamcity-server:2025.11
     container_name: teamcity
     network_mode: host
     environment:

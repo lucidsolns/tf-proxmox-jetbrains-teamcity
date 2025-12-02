@@ -1,6 +1,6 @@
 # Terraform to deploy Jetbrains Teamcity on a Flatcar Container Linux VM running on Proxmox
 
-This repository contains:
+This [repository](https://github.com/lucidsolns/tf-proxmox-jetbrains-teamcity) contains:
   - a Terraform script
   - that provisions a [Teamcity build server](https://hub.docker.com/r/jetbrains/teamcity-server/)
   - on a Proxmox virtualisation environment (QEMU/KVM) using bpg/proxmox
@@ -14,7 +14,7 @@ This repository contains:
 
 # Residuals
 
-- add a healthcheck to the containers
+- add a health check to the containers
 - change the filesystem permission setup (was runtime script in the service start, but changing to virtiofs
   should mean this can be simplified)
 
