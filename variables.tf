@@ -41,10 +41,7 @@ variable "bridge" {
   type=string
 }
 
-variable "network_tag" {
-  default = 0
-  type = number
-}
+
 
 variable "storage_images" { default = "vmroot" }
 variable "storage_root" { default = "vmroot" }
