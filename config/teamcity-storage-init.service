@@ -1,0 +1,22 @@
+#
+#  A oneshot service to check that teamcity data directories are present. The data
+#  mount for teamcity happens after ignition (butane) has run, so this needs to be done
+#  explicitly.
+#
+[Unit]
+Description=Initialize TeamCity data directories
+Requires=var-lib-teamcity.mount
+After=var-lib-teamcity.mount
+
+Before=teamcity.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+
+ExecStart=/usr/bin/mkdir -p /var/lib/teamcity/data /var/lib/teamcity/logs
+ExecStart=/usr/bin/chown -R tcuser:tcuser /var/lib/teamcity
+ExecStart=/usr/bin/chmod 0750 /var/lib/teamcity/data /var/lib/teamcity/logs
+
+[Install]
+WantedBy=multi-user.target

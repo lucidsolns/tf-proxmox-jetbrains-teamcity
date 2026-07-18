@@ -1,0 +1,47 @@
+#
+#  Run the postgres container using a podman quadlet
+#
+#  see:
+#    - https://hub.docker.com/_/postgres
+#
+[Unit]
+Description=PostgreSQL for TeamCity
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Restart=always
+TimeoutStartSec=300
+
+[Install]
+WantedBy=multi-user.target
+
+[Container]
+Image=docker.io/library/postgres:15.4-bookworm
+ContainerName=postgres
+Network=db_bridge.network
+AutoUpdate=registry
+Pull=newer
+
+EnvironmentFile=/etc/postgres.env
+# Environment=PGDATA=/var/lib/postgresql/data
+
+#
+#  Mount both the data volume and a configuration file.
+#
+Volume=/var/lib/postgresql/data:/var/lib/postgresql/data:Z
+Volume=/etc/postgresql/postgresql.conf:/etc/postgresql/postgresql.conf:Z
+
+StopSignal=SIGTERM
+StopTimeout=120
+
+#  The health check gets translated to a unit file in the 'X-Container' section and does
+#  not have the environment variables defined. They will be loaded into the container
+#  thus the $${} syntax to defer the evaluation until the health check is run inside the
+#  container.
+#
+HealthCmd=pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}
+HealthInterval=30s
+HealthTimeout=5s
+HealthRetries=10
+

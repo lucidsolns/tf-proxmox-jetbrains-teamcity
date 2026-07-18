@@ -1,0 +1,21 @@
+{
+  "default": [
+    {
+      "type": "reject"
+    }
+  ],
+  "transports": {
+    "docker": {
+      "docker.io/library": [
+        {
+          "type": "insecureAcceptAnything"
+        }
+      ],
+      "docker.io/jetbrains/teamcity-server": [
+        {
+          "type": "insecureAcceptAnything"
+        }
+      ]
+    }
+  }
+}

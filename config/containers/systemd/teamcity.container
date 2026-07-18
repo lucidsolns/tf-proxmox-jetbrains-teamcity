@@ -1,0 +1,58 @@
+#  Jetbrains TeamCity running as a systemd container with podman
+#
+#  To monitor the logs, run:
+#    journalctl -xefu teamcity
+#
+#  see:
+#    - https://docs.podman.io/en/latest/markdown/podman-systemd.unit.5.html
+#    - https://www.jetbrains.com/help/datalore/use-hub-for-docker-installation.html
+#    - https://hub.docker.com/r/jetbrains/teamcity-server
+#    - https://www.jetbrains.com/teamcity/download/other.html
+#    - https://github.com/JetBrains/teamcity-docker-images
+#    - https://github.com/JetBrains/teamcity-docker-samples
+#    - https://github.com/JetBrains/teamcity-docker-samples/blob/master/compose-ubuntu/docker-compose.yml
+#    - https://youtrack.jetbrains.com/issue/TW-83763/Teamcity-failed-to-start-with-new-PSQL-16-ERROR-unrecognized-configuration-parameter-lccollate
+#
+[Unit]
+Description=Jetbrains TeamCity
+After=network-online.target teamcity-storage-init.service postgres.service
+Wants=network-online.target
+Requires=teamcity-storage-init.service postgres.service
+
+[Service]
+Restart=always
+TimeoutStartSec=600
+
+[Install]
+WantedBy=multi-user.target
+
+[Container]
+Image=docker.io/jetbrains/teamcity-server:2026.1.2
+ContainerName=teamcity
+Network=host
+AutoUpdate=registry
+Pull=newer
+
+Environment=TZ=Pacific/Auckland
+Environment=X_TEAMCITY_SERVER_MEM_OPTS=-Xms1024m -Xmx4500m -XX:ReservedCodeCacheSize=640m -XX:MaxMetaspaceSize=512m -XX:+UseG1GC -XX:+ParallelRefProcEnabled -XX:+UnlockExperimentalVMOptions -XX:+UseContainerSupport
+
+
+Volume=/var/lib/teamcity/data:/data/teamcity_server/datadir:Z
+Volume=/var/lib/teamcity/logs:/opt/teamcity/logs:Z
+
+
+HealthStartupCmd=curl -f http://localhost:8111/healthCheck/healthy
+HealthStartupInterval=15s
+HealthStartupTimeout=5s
+HealthStartupRetries=12
+
+# 2. Production phase: Switch to checking if TeamCity is fully ready
+# Health check configuration mapping to TeamCity's ready endpoint
+HealthCmd=curl -f http://localhost:8111/healthCheck/ready
+HealthInterval=1m
+HealthTimeout=10s
+HealthRetries=3
+HealthStartPeriod=3m
+
+
+

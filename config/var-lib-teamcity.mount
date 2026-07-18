@@ -2,6 +2,8 @@
 #  Mount a virtiofs filesystem. This required FLatcar Linux version 4344 or
 #  greater (it has made it to the 'beta' channel as of August 2025)
 #
+#  This means multiple Teamcity VMs/conainers can share the same data.
+#
 # see:
 #  - https://github.com/flatcar/scripts/pull/2825
 #  - https://docs.kernel.org/filesystems/virtiofs.html

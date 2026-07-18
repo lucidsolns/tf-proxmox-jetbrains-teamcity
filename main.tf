@@ -13,7 +13,7 @@ terraform {
 module "olive" {
   # source = "../terraform-proxmox-flatcar-vm"
   source  = "lucidsolns/flatcar-vm/proxmox"
-  version = "1.0.19"
+  version = "1.0.20"
 
   node_name      = var.target_node
   vm_id          = 141
@@ -23,7 +23,7 @@ module "olive" {
   EOT
   tags           = ["flatcar", "jetbrains", "teamcity", "development"]
 
-  butane_conf         = "${path.module}/jetbrains-teamcity.bu.tftpl"
+  butane_conf         = "${path.module}/butane.tftpl"
   butane_snippet_path = "${path.module}/config"
   butane_variables = {
     DB_TEAMCITY_PASSWORD = random_password.db_teamcity_password.result

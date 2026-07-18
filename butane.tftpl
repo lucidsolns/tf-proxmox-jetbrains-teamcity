@@ -1,0 +1,183 @@
+# Configuration for the Flatcar VM, with support for terraform template substitution.
+#
+# To test translate the butane:
+#    butane --strict --pretty  --files-dir config jetbrains-teamcity-build-agent.bu.tftpl
+# see
+#   - https://coreos.github.io/butane/config-flatcar-v1_1/
+#   - https://coreos.github.io/butane/config-flatcar-v1_0/
+#   - https://coreos.github.io/butane/
+#
+version: 1.1.0
+variant: flatcar
+
+passwd:
+  users:
+    - name: core
+      ssh_authorized_keys:
+        - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFkyaM9D4TtCOSdIR8JvH5DCt0UHbfPGx7VlSJrP593N greg-ed25519
+        -
+    - name: tcuser
+      uid: 1000
+      primary_group: tcuser
+      no_create_home: true
+
+    - name: postgres
+      uid: 999
+      primary_group: postgres
+      no_create_home: true
+
+  groups:
+    - name: tcuser
+      gid: 1000
+    - name: postgres
+      gid: 999
+
+storage:
+  disks:
+    # Partition the sparse ZFS zvol with a GPT, with a single partition
+    - device: /dev/vdb
+      wipe_table: false
+      partitions:
+        - label: pgdata
+          number: 1
+          wipe_partition_entry: false
+          type_guid: 3B8F8425-20E0-4F3B-907F-1A25A76F98E8 # see https://en.wikipedia.org/wiki/GUID_Partition_Table
+
+  filesystems:
+    # In theory this partition could be auto-mounted, but it is not on the same physical disk
+    # as the EFI system partition.
+    - device: /dev/disk/by-partlabel/pgdata
+      path: /var/lib/postgresql
+      format: ext4
+      wipe_filesystem: false
+      label: pgdata
+      with_mount_unit: true
+
+  directories:
+    # Create a data directory inside the postgres volume for the database data. If
+    # the root of a volume is given to postgres it will fail. Postgres runs as user 999.
+    - path: /var/lib/postgresql/data
+      user:
+        id: 999
+      group:
+        id: 999
+
+    # TODO: This won't work as the /var/lib/teamcity filesystem won't be mounted in time.
+    # TODO: The systemd mount unit will run after the butane has finished.
+    - path: /var/lib/teamcity/data
+      mode: 0750
+      user:
+        name: tcuser
+      group:
+        name: tcuser
+
+    - path: /var/lib/teamcity/logs
+      mode: 0750
+      user:
+        name: tcuser
+      group:
+        name: tcuser
+
+  files:
+    - path: /etc/hostname
+      mode: 0644
+      contents:
+        inline: "${vm_name}"
+
+    - path: /etc/systemd/network/10-eth0.network
+      contents:
+        local: eth0.network
+
+    # Locks down the ssh daemon.
+    #
+    # see:
+    #  - https://www.flatcar.org/docs/latest/setup/security/customizing-sshd/
+    - path: /etc/ssh/sshd_config
+      overwrite: true
+      mode: 0600
+      contents:
+        local: sshd_config
+
+    # write the initial passwords/config to an environment file that will be provided
+    # to the postgres container. This password will also need to be manually used
+    # if performing an initial setup with Teamcity.
+    - path: /etc/postgres.env
+      mode: 0400
+      contents:
+        inline: |
+          POSTGRES_DB=teamcity
+          POSTGRES_USER=teamcity
+          POSTGRES_PASSWORD=${DB_TEAMCITY_PASSWORD}
+
+    # Add a Postgresql configuration file for the logging. The logging by default
+    # is going to stderr as text lines, which means systemd thinks the messages are
+    # errors. Use JSON structured logging instead. This means the postgres logs can
+    # be followed from the Flatcar CLI with:
+    #     journalctl -xefu postgres
+    - path: /etc/postgresql/postgresql.conf
+      overwrite: true
+      user:
+        id: 999
+      group:
+        id: 999
+      mode: 0644
+      contents:
+        inline: |
+          log_destination=jsonlog 
+          logging_collector=off
+
+
+    # Use the 'podman' sysext. It is important to note that the
+    # download will require network connectivity (which won't have been setup
+    # at this stage as the networkd file won't have been written, so the network
+    # will either need to get an address via DHCP, or a kernel command line configuration.
+    #
+    # Note that the podman sysext is an official, but an opt-in sysext. This means it is
+    # downloaded from the official release channel (rather than from the bakery).
+    #
+    # see:
+    #  - https://www.flatcar.org/docs/latest/provisioning/sysext/
+    #  - https://flatcar.github.io/sysext-bakery/
+    #  - https://github.com/flatcar/sysext-bakery
+    #  - https://www.flatcar.org/docs/latest/provisioning/sysext/#flatcar-release-extensions-official
+    #  - https://www.flatcar.org/docs/latest/provisioning/ignition/network-configuration/
+    - path: /etc/flatcar/enabled-sysext.conf
+      contents:
+        inline: |
+          podman
+
+  trees:
+    # Podman policy configuration and quadlet configuration
+    - local: containers
+      path: /etc/containers
+
+  links:
+
+    # Disable the docker sysext (i.e. opt out)
+    - path: /etc/extensions/docker-flatcar.raw
+      target: /dev/null
+      overwrite: true
+
+    # Disable the containerd sysext
+    - path: /etc/extensions/containerd-flatcar.raw
+      target: /dev/null
+      overwrite: true
+
+systemd:
+  units:
+    # Mounts the virtiofs based volume for teamcity
+    - name: var-lib-teamcity.mount
+      enabled: true
+      contents_local: var-lib-teamcity.mount
+
+    # A service run once a week to clean up dangling containers
+    - name: podman-prune.service
+      contents_local: podman-prune.service
+
+    - name: podman-prune.timer
+      enabled: true
+      contents_local: podman-prune.timer
+
+    - name: teamcity-storage-init.service
+      enabled: true
+      contents_local: teamcity-storage-init.service
