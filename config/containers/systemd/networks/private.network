@@ -1,0 +1,8 @@
+#
+#  A private bridged network for the Teamcity container and the PostgreSQL database.
+#
+#  Will need to check how well this works for outgoing SSH/Git over IPv6.
+#
+[Network]
+Driver=bridge
+IPv6=true

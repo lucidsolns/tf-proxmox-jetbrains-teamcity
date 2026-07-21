@@ -17,14 +17,13 @@ TimeoutStartSec=300
 WantedBy=multi-user.target
 
 [Container]
-Image=docker.io/library/postgres:15.4-bookworm
+Image=docker.io/library/postgres:15
 ContainerName=postgres
-Network=db_bridge.network
+Network=host
 AutoUpdate=registry
 Pull=newer
 
 EnvironmentFile=/etc/postgres.env
-# Environment=PGDATA=/var/lib/postgresql/data
 
 #
 #  Mount both the data volume and a configuration file.
